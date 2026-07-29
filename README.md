@@ -19,6 +19,10 @@ with your local laws regarding RF reception and monitoring.
 
 - M5Stack CardputerADV (ESP32-S3, ST7789V2 display, TCA8418 keyboard,
   ES8311 speaker codec, microSD slot)
+- [M5Stack Cap LoRa-1262](https://docs.m5stack.com/en/cap/Cap_LoRa-1262)
+  expansion module — used here only for its onboard GNSS chip (ATGM336H),
+  read over UART (NMEA) on pins RX=13/TX=15. The module's SX1262 LoRa
+  radio isn't used by this project yet.
 
 ## Detection approach
 
@@ -48,7 +52,7 @@ camera doesn't spam repeat alerts.
    - Partition Scheme: default (8MB) or larger, since PSRAM/flash usage
      is modest but SD/SPIFFS headroom helps
 4. In **Library Manager**, install `M5Cardputer` (this pulls in
-   `M5Unified`, `M5GFX`, and `IRremote` as dependencies).
+   `M5Unified`, `M5GFX`, and `IRremote` as dependencies) and `TinyGPSPlus`.
 5. Open `FlockEwe.ino` and upload.
 
 ## Files
@@ -58,15 +62,17 @@ camera doesn't spam repeat alerts.
   per-MAC cooldown, hands detections to the main loop via a FreeRTOS queue
 - `flock_detect.{h,cpp}` — OUI table + probe IE signature matching
 - `ui.{h,cpp}` — on-device display (idle screen, alert screen)
-- `logger.{h,cpp}` — SD card JSON-lines logging of detections
+- `gps.{h,cpp}` — reads NMEA position fixes from the Cap LoRa-1262's GNSS chip
+- `logger.{h,cpp}` — SD card JSON-lines logging of detections + GPS fix
 
 ## Logging
 
 Detections are appended as JSON-lines to `/flockewe_<millis>.jsonl` on the
-SD card, one file per boot session:
+SD card, one file per boot session. `lat`/`lng`/`alt_m`/`sats` are only
+present when a GPS fix was available at detection time:
 
 ```json
-{"t":12345,"mac":"70:C9:4E:AA:BB:CC","rssi":-62,"ch":6,"oui":true,"ie":false}
+{"t":12345,"mac":"70:C9:4E:AA:BB:CC","rssi":-62,"ch":6,"oui":true,"ie":false,"gps_fix":true,"lat":40.712800,"lng":-74.006000,"alt_m":10.5,"sats":8}
 ```
 
 ## Using with Launcher

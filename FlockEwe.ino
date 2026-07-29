@@ -2,14 +2,15 @@
 // M5Stack CardputerADV. Receive-only — listens for probe-request beacons,
 // never transmits or associates. Built for privacy-auditing/research use.
 //
-// Board:     M5Stack CardputerADV (ESP32-S3)
+// Board:     M5Stack CardputerADV (ESP32-S3) + Cap LoRa-1262 module (GNSS)
 // Framework: Arduino IDE (esp32 board package by Espressif Systems)
-// Libraries: M5Cardputer (pulls in M5Unified, M5GFX, IRremote)
+// Libraries: M5Cardputer (pulls in M5Unified, M5GFX, IRremote), TinyGPSPlus
 // Launcher:  compatible as a standalone sketch — see README for details.
 
 #include <M5Cardputer.h>
 
 #include "flock_detect.h"
+#include "gps.h"
 #include "logger.h"
 #include "ui.h"
 #include "wifi_scan.h"
@@ -34,6 +35,7 @@ void setup() {
 
     uiInit();
     wifiScanInit();
+    gpsInit();
     sdReady = loggerInit();
 
     uiShowIdle(wifiScanCurrentChannel(), totalDetections, sdReady);
@@ -42,11 +44,12 @@ void setup() {
 void loop() {
     M5Cardputer.update();
     wifiScanLoop();
+    gpsLoop();
 
     Detection det;
     while (wifiScanPopDetection(det)) {
         totalDetections++;
-        loggerLogDetection(det);
+        loggerLogDetection(det, gpsGetFix());
         M5Cardputer.Speaker.tone(2000, 150);
         uiShowAlert(det);
         alertUntilMs = millis() + 3000;

@@ -30,14 +30,29 @@ bool loggerInit() {
     return ready;
 }
 
-void loggerLogDetection(const Detection& d) {
+void loggerLogDetection(const Detection& d, const GpsFix& fix) {
     if (!ready) return;
 
-    logFile.printf(
-        "{\"t\":%lu,\"mac\":\"%02X:%02X:%02X:%02X:%02X:%02X\",\"rssi\":%d,"
-        "\"ch\":%d,\"oui\":%s,\"ie\":%s}\n",
-        (unsigned long)d.timestampMs, d.mac[0], d.mac[1], d.mac[2], d.mac[3],
-        d.mac[4], d.mac[5], d.rssi, d.channel, d.ouiMatch ? "true" : "false",
-        d.ieMatch ? "true" : "false");
+    char macStr[18];
+    snprintf(macStr, sizeof(macStr), "%02X:%02X:%02X:%02X:%02X:%02X", d.mac[0],
+             d.mac[1], d.mac[2], d.mac[3], d.mac[4], d.mac[5]);
+
+    String line = "{";
+    line += "\"t\":" + String(d.timestampMs);
+    line += ",\"mac\":\"" + String(macStr) + "\"";
+    line += ",\"rssi\":" + String(d.rssi);
+    line += ",\"ch\":" + String(d.channel);
+    line += ",\"oui\":" + String(d.ouiMatch ? "true" : "false");
+    line += ",\"ie\":" + String(d.ieMatch ? "true" : "false");
+    line += ",\"gps_fix\":" + String(fix.valid ? "true" : "false");
+    if (fix.valid) {
+        line += ",\"lat\":" + String(fix.lat, 6);
+        line += ",\"lng\":" + String(fix.lng, 6);
+        line += ",\"alt_m\":" + String(fix.altitudeM, 1);
+        line += ",\"sats\":" + String(fix.satellites);
+    }
+    line += "}";
+
+    logFile.println(line);
     logFile.flush();
 }
