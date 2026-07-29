@@ -141,6 +141,14 @@ There's currently no in-app "return to Launcher" shortcut — use the
 physical reset button (or enable Launcher's "Boot to Launcher" option so
 it always stops at the menu instead of auto-booting the last app).
 
+## Testing
+
+[FlockSpoofer](FlockSpoofer/) is a companion sketch for a second, generic
+ESP32 board that transmits fabricated probe requests spoofing known
+Flock Safety OUIs and the matching IE fingerprint, so you can test the
+whole detection pipeline without a real camera nearby. See its own
+README for setup and usage.
+
 ## Roadmap / ideas
 
 - Keep expanding the OUI table as more Flock Safety hardware is confirmed
