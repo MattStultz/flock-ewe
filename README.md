@@ -42,6 +42,22 @@ Two independent signals, either of which triggers an alert:
 Matches are deduplicated per-MAC with a 5-second cooldown so a single
 camera doesn't spam repeat alerts.
 
+## On-device UI
+
+The screen has three states: an idle/scanning screen, a full-screen alert,
+and a settings menu.
+
+- Press **M** on the idle screen to open **Settings**, where **Enter**
+  toggles audio alerts on/off; press **M** again to go back. The idle
+  screen always shows a `[M] MENU` / `AUDIO:ON` hint at the bottom.
+- On detection, the screen flashes to the alert view and holds for
+  **10 seconds**, beeping once a second (if audio alerts are on) with a
+  live countdown to the idle screen. A new detection while the alert is
+  already showing resets the 10-second hold and refreshes the displayed
+  MAC/RSSI/match info rather than queuing behind it.
+- The menu isn't reachable while an alert is showing — a real detection
+  always takes priority.
+
 ## Firmware setup (Arduino IDE)
 
 1. In **Boards Manager**, install `esp32` by Espressif Systems.
@@ -67,13 +83,25 @@ camera doesn't spam repeat alerts.
 
 ## Logging
 
-Detections are appended as JSON-lines to `/flockewe_<millis>.jsonl` on the
-SD card, one file per boot session. `lat`/`lng`/`alt_m`/`sats` are only
+Detections are appended as JSON-lines to a session file on the SD card,
+named `flockeweMMDDYYHHmm.txt` from the GPS's UTC date/time (e.g.
+`flockewe072926143022.txt`). The file is created lazily — on the *first*
+detection of the session, not at boot — so a session with no detections
+never creates an empty file, and each run gets its own file. If no GPS
+fix/time has been acquired yet at that first detection, it falls back to
+`flockewe_nofix_<millis>.txt`.
+
+The file is opened, appended to, and closed again on every single write
+(rather than held open for the whole session) so a sudden power loss
+can't leave it locked or corrupted. `lat`/`lng`/`alt_m`/`sats` are only
 present when a GPS fix was available at detection time:
 
 ```json
 {"t":12345,"mac":"70:C9:4E:AA:BB:CC","rssi":-62,"ch":6,"oui":true,"ie":false,"gps_fix":true,"lat":40.712800,"lng":-74.006000,"alt_m":10.5,"sats":8}
 ```
+
+Note: the filename's date/time is UTC (as broadcast by GPS satellites),
+not local time.
 
 ## Using with Launcher
 
@@ -93,5 +121,5 @@ it always stops at the menu instead of auto-booting the last app).
 
 - Expand the OUI table with verified Flock Safety hardware prefixes
 - On-screen detection history / log viewer
-- Keyboard shortcut to mute the alert tone
 - Return-to-Launcher shortcut
+- Persist the audio-alerts setting across reboots (currently resets to on)

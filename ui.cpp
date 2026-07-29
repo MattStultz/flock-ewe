@@ -14,6 +14,7 @@ uint16_t colSheepBody;
 uint16_t colSheepHead;
 uint16_t colEyeCalm;
 uint16_t colEyeAlert;
+uint16_t colHint;
 
 void drawHudCorners(uint16_t color) {
     auto& d = M5Cardputer.Display;
@@ -73,6 +74,19 @@ void drawSheep(int x, int y, uint16_t bodyColor, uint16_t headColor,
     d.fillCircle(x + 3, y + 6, 1, eyeColor);
 }
 
+// Redraws only the alert screen's bottom row (used both for the initial
+// draw and for the once-a-second countdown tick).
+void drawCountdownRow(int secondsRemaining) {
+    auto& d = M5Cardputer.Display;
+    d.fillRect(0, 96, 230, 20, colAlertBg);
+    d.setTextSize(2);
+    d.setTextColor(TFT_WHITE);
+    d.setCursor(8, 96);
+    char buf[24];
+    snprintf(buf, sizeof(buf), "RETURN %2ds", secondsRemaining);
+    d.print(buf);
+}
+
 }  // namespace
 
 void uiInit() {
@@ -90,38 +104,48 @@ void uiInit() {
     colSheepHead = d.color565(30, 34, 46);
     colEyeCalm = colCyan;
     colEyeAlert = d.color565(255, 40, 40);
+    colHint = d.color565(110, 150, 160);
 
     d.fillScreen(colBg);
 }
 
-void uiShowIdle(uint8_t channel, uint32_t totalDetections, bool sdReady) {
+void uiShowIdle(uint8_t channel, uint32_t totalDetections, bool sdReady,
+                bool audioAlertsEnabled) {
     auto& d = M5Cardputer.Display;
     d.fillScreen(colBg);
     drawScanlines(colDim);
     drawHudCorners(colCyan);
 
-    drawGlowText(14, 8, "FLOCK-EWE", 2, colDim, colMagenta);
+    drawGlowText(6, 4, "FLOCK-EWE", 2, colDim, colMagenta);
 
     char buf[24];
-    d.setTextSize(1);
+    d.setTextSize(2);
+
     d.setTextColor(colCyan);
-    d.setCursor(14, 34);
-    snprintf(buf, sizeof(buf), "[ CH %02d ]", channel);
+    d.setCursor(8, 30);
+    snprintf(buf, sizeof(buf), "CH  %02d", channel);
     d.print(buf);
 
-    d.setCursor(90, 34);
-    snprintf(buf, sizeof(buf), "[ DET %03lu ]", (unsigned long)totalDetections);
+    d.setCursor(8, 52);
+    snprintf(buf, sizeof(buf), "DET %03lu", (unsigned long)totalDetections);
     d.print(buf);
 
     d.setTextColor(sdReady ? colCyan : colMagenta);
-    d.setCursor(14, 48);
-    d.print(sdReady ? "[ SD OK ]" : "[ SD FAIL ]");
+    d.setCursor(8, 74);
+    d.print(sdReady ? "SD  OK" : "SD  FAIL");
 
     d.setTextColor(colAmber);
-    d.setCursor(14, 62);
-    d.print("> scanning for flock signal...");
+    d.setCursor(8, 96);
+    d.print("SCANNING...");
 
-    drawSheep(190, 96, colSheepBody, colSheepHead, colEyeCalm);
+    drawSheep(172, 62, colSheepBody, colSheepHead, colEyeCalm);
+
+    d.setTextSize(1);
+    d.setTextColor(colHint);
+    d.setCursor(6, 120);
+    snprintf(buf, sizeof(buf), "[M] MENU   AUDIO:%s",
+             audioAlertsEnabled ? "ON" : "OFF");
+    d.print(buf);
 }
 
 void uiShowAlert(const Detection& det) {
@@ -129,25 +153,55 @@ void uiShowAlert(const Detection& det) {
     d.fillScreen(colAlertBg);
     drawHudCorners(colMagenta);
 
-    drawGlowText(10, 4, "!! FLOCK CAM !!", 2, TFT_BLACK, TFT_WHITE);
+    drawGlowText(6, 4, "!! FLOCK CAM !!", 2, TFT_BLACK, TFT_WHITE);
 
-    char buf[40];
-    d.setTextSize(1);
+    char buf[24];
+    d.setTextSize(2);
     d.setTextColor(TFT_WHITE);
 
-    d.setCursor(6, 30);
-    snprintf(buf, sizeof(buf), "MAC  %02X:%02X:%02X:%02X:%02X:%02X", det.mac[0],
+    d.setCursor(8, 30);
+    snprintf(buf, sizeof(buf), "%02X:%02X:%02X:%02X:%02X:%02X", det.mac[0],
              det.mac[1], det.mac[2], det.mac[3], det.mac[4], det.mac[5]);
     d.print(buf);
 
-    d.setCursor(6, 46);
-    snprintf(buf, sizeof(buf), "RSSI %d dBm   CH %d", det.rssi, det.channel);
+    d.setCursor(8, 52);
+    snprintf(buf, sizeof(buf), "%d dBm  CH%d", det.rssi, det.channel);
     d.print(buf);
 
-    d.setCursor(6, 62);
-    snprintf(buf, sizeof(buf), "MATCH %s%s", det.ouiMatch ? "OUI " : "",
+    d.setCursor(8, 74);
+    snprintf(buf, sizeof(buf), "%s%s", det.ouiMatch ? "OUI " : "",
              det.ieMatch ? "IE" : "");
     d.print(buf);
 
-    drawSheep(190, 90, TFT_WHITE, TFT_BLACK, colEyeAlert);
+    drawSheep(172, 62, TFT_WHITE, TFT_BLACK, colEyeAlert);
+
+    drawCountdownRow(10);
+}
+
+void uiUpdateAlertCountdown(uint8_t secondsRemaining) {
+    drawCountdownRow(secondsRemaining);
+}
+
+void uiShowMenu(bool audioAlertsEnabled) {
+    auto& d = M5Cardputer.Display;
+    d.fillScreen(colBg);
+    drawHudCorners(colAmber);
+
+    drawGlowText(6, 4, "SETTINGS", 2, colDim, colAmber);
+
+    d.setTextSize(2);
+    d.setTextColor(TFT_WHITE);
+    d.setCursor(8, 34);
+    d.print("AUDIO ALERTS");
+
+    d.setTextColor(audioAlertsEnabled ? colCyan : colMagenta);
+    d.setCursor(8, 58);
+    d.print(audioAlertsEnabled ? "> ON <" : "> OFF <");
+
+    drawSheep(172, 70, colSheepBody, colSheepHead, colEyeCalm);
+
+    d.setTextSize(1);
+    d.setTextColor(colHint);
+    d.setCursor(6, 100);
+    d.print("[ENTER] TOGGLE   [M] BACK");
 }

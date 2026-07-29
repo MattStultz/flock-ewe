@@ -17,10 +17,25 @@
 
 namespace {
 
+enum AppMode { MODE_IDLE, MODE_ALERT, MODE_MENU };
+
+const uint32_t ALERT_HOLD_MS = 10000;
+const uint32_t BEEP_INTERVAL_MS = 1000;
+const uint32_t IDLE_REFRESH_MS = 500;
+
+AppMode mode = MODE_IDLE;
 uint32_t totalDetections = 0;
 uint32_t lastUiRefresh = 0;
-uint32_t alertUntilMs = 0;
+uint32_t alertEnteredMs = 0;
+uint32_t lastBeepMs = 0;
 bool sdReady = false;
+bool audioAlertsEnabled = true;
+bool prevMKeyPressed = false;
+bool prevEnterKeyPressed = false;
+
+void beep() {
+    if (audioAlertsEnabled) M5Cardputer.Speaker.tone(2000, 120);
+}
 
 }  // namespace
 
@@ -38,7 +53,7 @@ void setup() {
     gpsInit();
     sdReady = loggerInit();
 
-    uiShowIdle(wifiScanCurrentChannel(), totalDetections, sdReady);
+    uiShowIdle(wifiScanCurrentChannel(), totalDetections, sdReady, audioAlertsEnabled);
 }
 
 void loop() {
@@ -46,18 +61,65 @@ void loop() {
     wifiScanLoop();
     gpsLoop();
 
+    uint32_t now = millis();
+
+    // A new detection always takes priority: (re)enter alert mode and
+    // reset the hold timer, even if an alert is already showing.
     Detection det;
+    bool gotDetection = false;
     while (wifiScanPopDetection(det)) {
+        gotDetection = true;
         totalDetections++;
         loggerLogDetection(det, gpsGetFix());
-        M5Cardputer.Speaker.tone(2000, 150);
+    }
+    if (gotDetection) {
+        mode = MODE_ALERT;
+        alertEnteredMs = now;
+        lastBeepMs = now;
         uiShowAlert(det);
-        alertUntilMs = millis() + 3000;
+        beep();
     }
 
-    uint32_t now = millis();
-    if (now > alertUntilMs && now - lastUiRefresh > 500) {
-        uiShowIdle(wifiScanCurrentChannel(), totalDetections, sdReady);
+    // Edge-detect the 'm' key so holding it doesn't repeatedly toggle.
+    bool mNow = M5Cardputer.Keyboard.isKeyPressed('m');
+    if (mNow && !prevMKeyPressed) {
+        if (mode == MODE_IDLE) {
+            mode = MODE_MENU;
+            uiShowMenu(audioAlertsEnabled);
+        } else if (mode == MODE_MENU) {
+            mode = MODE_IDLE;
+            uiShowIdle(wifiScanCurrentChannel(), totalDetections, sdReady,
+                       audioAlertsEnabled);
+        }
+    }
+    prevMKeyPressed = mNow;
+
+    if (mode == MODE_MENU) {
+        bool enterNow = M5Cardputer.Keyboard.keysState().enter;
+        if (enterNow && !prevEnterKeyPressed) {
+            audioAlertsEnabled = !audioAlertsEnabled;
+            uiShowMenu(audioAlertsEnabled);
+        }
+        prevEnterKeyPressed = enterNow;
+    }
+
+    if (mode == MODE_ALERT) {
+        if (now - alertEnteredMs >= ALERT_HOLD_MS) {
+            mode = MODE_IDLE;
+            uiShowIdle(wifiScanCurrentChannel(), totalDetections, sdReady,
+                       audioAlertsEnabled);
+        } else if (now - lastBeepMs >= BEEP_INTERVAL_MS) {
+            lastBeepMs = now;
+            beep();
+            uint32_t elapsed = now - alertEnteredMs;
+            uint8_t secondsLeft = (ALERT_HOLD_MS - elapsed + 999) / 1000;
+            uiUpdateAlertCountdown(secondsLeft);
+        }
+    }
+
+    if (mode == MODE_IDLE && now - lastUiRefresh > IDLE_REFRESH_MS) {
+        uiShowIdle(wifiScanCurrentChannel(), totalDetections, sdReady,
+                   audioAlertsEnabled);
         lastUiRefresh = now;
     }
 }

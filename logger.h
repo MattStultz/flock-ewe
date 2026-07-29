@@ -3,8 +3,9 @@
 #include "gps.h"
 #include "wifi_scan.h"
 
-// Mounts the SD card and opens a new session log file. Returns true on
-// success; logging calls are safely skipped if this returns false.
+// Mounts the SD card. Returns true on success; logging calls are safely
+// skipped if this returns false. The session log file itself isn't created
+// yet — that happens lazily on the first detection, see loggerLogDetection().
 bool loggerInit();
 
 // Appends one JSON-lines record for a detection, tagged with the GPS fix

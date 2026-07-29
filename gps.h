@@ -19,3 +19,8 @@ void gpsLoop();
 
 // Latest known fix. `valid` is false until a fresh fix has been parsed.
 GpsFix gpsGetFix();
+
+// Latest known UTC date/time from the GNSS almanac (NMEA RMC/GGA), used to
+// name session log files. `year2` is the two-digit year (e.g. 26 for 2026).
+// Returns false if no valid date/time has been parsed yet.
+bool gpsGetDateTime(int& month, int& day, int& year2, int& hour, int& minute);
