@@ -29,10 +29,10 @@ with your local laws regarding RF reception and monitoring.
 Two independent signals, either of which triggers an alert:
 
 1. **OUI matching** — the transmitting MAC's vendor prefix is checked
-   against a small seed table in [flock_detect.cpp](flock_detect.cpp).
-   MAC OUI-to-vendor assignments are public IEEE registry data
-   (https://standards-oui.ieee.org/) — expand the table with your own
-   verified research as you confirm more hardware.
+   against a table of 30 confirmed Flock Safety hardware prefixes in
+   [flock_detect.cpp](flock_detect.cpp). MAC OUI-to-vendor assignments are
+   public IEEE registry data (https://standards-oui.ieee.org/) — add more
+   entries there as you confirm additional hardware.
 2. **Probe IE fingerprint** — Flock Safety units emit a distinctive
    wildcard probe request (empty SSID) with a specific sequence of
    Information Element tags. `matchesFlockProbeSignature()` parses the
@@ -119,7 +119,7 @@ it always stops at the menu instead of auto-booting the last app).
 
 ## Roadmap / ideas
 
-- Expand the OUI table with verified Flock Safety hardware prefixes
+- Keep expanding the OUI table as more Flock Safety hardware is confirmed
 - On-screen detection history / log viewer
 - Return-to-Launcher shortcut
 - Persist the audio-alerts setting across reboots (currently resets to on)
