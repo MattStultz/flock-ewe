@@ -17,13 +17,13 @@ struct GpsStatus {
 };
 
 // Starts the UART toward the Cap LoRa-1262's GNSS chip (ATGM336H, NMEA
-// over UART on CardputerADV pins RX=13/TX=15). The chip's actual NMEA
-// baud rate isn't reliably documented, so this probes common rates and
-// locks onto whichever one produces valid sentences.
+// over UART on CardputerADV: board RX=GPIO15, board TX=GPIO13, 115200
+// baud — confirmed against a working reference (meshtastic-firmware's
+// CardputerADV variant), not the M5Stack docs table, which has the pins
+// swapped from the board's point of view.
 void gpsInit();
 
-// Call every loop() iteration; feeds incoming NMEA bytes to the parser
-// and drives the baud-rate probe.
+// Call every loop() iteration; feeds incoming NMEA bytes to the parser.
 void gpsLoop();
 
 // Latest known fix. `valid` is false until a fresh fix has been parsed.

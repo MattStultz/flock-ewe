@@ -21,17 +21,19 @@ with your local laws regarding RF reception and monitoring.
   ES8311 speaker codec, microSD slot)
 - [M5Stack Cap LoRa-1262](https://docs.m5stack.com/en/cap/Cap_LoRa-1262)
   expansion module — used here only for its onboard GNSS chip (ATGM336H),
-  read over UART (NMEA) on pins RX=13/TX=15. The module's SX1262 LoRa
-  radio isn't used by this project yet.
+  read over UART (NMEA) at 115200 baud on board pins RX=**GPIO15**,
+  TX=**GPIO13**. The module's SX1262 LoRa radio isn't used by this
+  project yet.
 
-  The chip's actual NMEA baud rate isn't reliably documented — some vendor
-  docs claim 115200, but 9600 is the near-universal factory default for
-  this chip family. Rather than gamble on one, `gpsInit()`/`gpsLoop()`
-  probe both and lock onto whichever produces valid, checksummed
-  sentences. If you still never see a GPS lock after driving around with
-  clear sky view, check the GPS status screen (**G** from idle) — `LINK
-  NONE` after both rates have been tried points to a wiring/antenna issue
-  rather than a baud mismatch.
+  Note the pins are the reverse of what M5Stack's own docs table seems to
+  suggest (it reads "GPS_RX=G13, GPS_TX=G15") — that table is apparently
+  labeled from the GNSS module's own perspective, not the board's, and an
+  earlier version of this firmware took it at face value and got zero
+  NMEA data as a result, on any baud rate. The pins above were confirmed
+  by cross-referencing [psifertex/meshtastic-firmware](https://github.com/psifertex/meshtastic-firmware)'s
+  working CardputerADV variant definition. If the GPS status screen
+  (**G** from idle) still shows `LINK NONE` outdoors with this config,
+  suspect wiring/antenna rather than pins or baud.
 
 ## Detection approach
 

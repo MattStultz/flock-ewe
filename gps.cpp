@@ -5,18 +5,14 @@
 
 namespace {
 
-const int PIN_GPS_RX = 13;  // GNSS module TX -> board RX
-const int PIN_GPS_TX = 15;  // GNSS module RX -> board TX
-
-// The Cap LoRa-1262's ATGM336H doesn't have a reliably documented NMEA
-// baud rate, so probe common ones in order and lock onto whichever one
-// actually produces valid, checksummed sentences. 9600 is the near-
-// universal factory default for this chip family; 115200 is included
-// since some vendor docs claim it.
-const uint32_t BAUD_CANDIDATES[] = {9600, 115200};
-const uint8_t BAUD_CANDIDATE_COUNT =
-    sizeof(BAUD_CANDIDATES) / sizeof(BAUD_CANDIDATES[0]);
-const uint32_t BAUD_PROBE_MS = 4000;  // time to wait before trying the next rate
+// Confirmed against psifertex/meshtastic-firmware's working CardputerADV +
+// Cap LoRa-1262 variant config: board RX (receives the GNSS module's TX
+// output) is GPIO15, board TX is GPIO13, fixed 115200 baud. An earlier
+// version of this file had RX/TX swapped, which produced zero NMEA data
+// regardless of baud rate — that was the actual bug, not the baud rate.
+const int PIN_GPS_RX = 15;
+const int PIN_GPS_TX = 13;
+const uint32_t GPS_BAUD = 115200;
 
 const uint32_t FIX_MAX_AGE_MS = 5000;
 const uint32_t COMMS_MAX_AGE_MS = 3000;
@@ -24,23 +20,13 @@ const uint32_t COMMS_MAX_AGE_MS = 3000;
 HardwareSerial gpsSerial(1);  // UART1; UART0 is reserved by USB CDC
 TinyGPSPlus gps;
 
-uint8_t baudIndex = 0;
-uint32_t baudStartedMs = 0;
 uint32_t lastValidSentenceMs = 0;
 uint32_t lastPassedChecksum = 0;
-bool baudLocked = false;  // stop probing once a rate proves valid
-
-void beginAtCurrentBaud() {
-    gpsSerial.end();
-    gpsSerial.begin(BAUD_CANDIDATES[baudIndex], SERIAL_8N1, PIN_GPS_RX,
-                     PIN_GPS_TX);
-    baudStartedMs = millis();
-}
 
 }  // namespace
 
 void gpsInit() {
-    beginAtCurrentBaud();
+    gpsSerial.begin(GPS_BAUD, SERIAL_8N1, PIN_GPS_RX, PIN_GPS_TX);
 }
 
 void gpsLoop() {
@@ -52,12 +38,6 @@ void gpsLoop() {
     if (passed != lastPassedChecksum) {
         lastPassedChecksum = passed;
         lastValidSentenceMs = millis();
-        baudLocked = true;
-    }
-
-    if (!baudLocked && millis() - baudStartedMs >= BAUD_PROBE_MS) {
-        baudIndex = (baudIndex + 1) % BAUD_CANDIDATE_COUNT;
-        beginAtCurrentBaud();
     }
 }
 
