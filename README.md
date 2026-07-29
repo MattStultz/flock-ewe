@@ -57,8 +57,10 @@ and a settings menu.
   MAC/RSSI/match info rather than queuing behind it.
 - The menu isn't reachable while an alert is showing — a real detection
   always takes priority.
-- A small satellite icon above the CyberEwe mascot shows GPS status —
-  solid cyan when the GNSS has a fix, muted grey when it doesn't.
+- A small cyan satellite icon appears above the CyberEwe mascot when the
+  GNSS has a fix, and disappears entirely otherwise — a dimmer color for
+  "no fix" was tried first, but grey vs. cyan was too hard to tell apart
+  on this small screen.
 
 Every screen is composed into an off-screen `M5Canvas` sprite and pushed
 to the panel in one shot, rather than drawn primitive-by-primitive

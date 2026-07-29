@@ -76,8 +76,9 @@ void drawSheep(int x, int y, uint16_t bodyColor, uint16_t headColor,
     canvas.fillCircle(x + 5, y + 9, 2, eyeColor);
 }
 
-// Small satellite glyph shown above the sheep: solid when the GPS has a
-// fix, muted grey when it doesn't.
+// Small satellite glyph shown above the sheep only while the GPS has a
+// fix — it's simply omitted otherwise, rather than shown in a dimmer
+// color (grey vs. cyan was too hard to tell apart on this small screen).
 void drawSatellite(int x, int y, uint16_t color) {
     canvas.fillRect(x, y + 5, 8, 4, color);
     canvas.fillRect(x + 17, y + 5, 8, 4, color);
@@ -153,7 +154,7 @@ void uiShowIdle(uint8_t channel, uint32_t totalDetections, bool sdReady,
     canvas.setCursor(8, 96);
     canvas.print("SCANNING...");
 
-    drawSatellite(195, 10, gpsLocked ? colCyan : colHint);
+    if (gpsLocked) drawSatellite(195, 10, colCyan);
     drawSheep(184, 58, colSheepBody, colSheepHead, colEyeCalm);
 
     canvas.setTextSize(1);
@@ -190,7 +191,7 @@ void uiShowAlert(const Detection& det, bool gpsLocked) {
              det.ieMatch ? "IE" : "");
     canvas.print(buf);
 
-    drawSatellite(195, 10, gpsLocked ? colCyan : colHint);
+    if (gpsLocked) drawSatellite(195, 10, colCyan);
     drawSheep(184, 58, TFT_WHITE, TFT_BLACK, colEyeAlert);
 
     drawCountdownRow(10);  // also pushes the finished frame
@@ -215,7 +216,7 @@ void uiShowMenu(bool audioAlertsEnabled, bool gpsLocked) {
     canvas.setCursor(8, 58);
     canvas.print(audioAlertsEnabled ? "> ON <" : "> OFF <");
 
-    drawSatellite(195, 10, gpsLocked ? colCyan : colHint);
+    if (gpsLocked) drawSatellite(195, 10, colCyan);
     drawSheep(184, 58, colSheepBody, colSheepHead, colEyeCalm);
 
     canvas.setTextSize(1);
