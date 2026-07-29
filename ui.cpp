@@ -57,21 +57,21 @@ void drawSheep(int x, int y, uint16_t bodyColor, uint16_t headColor,
                uint16_t eyeColor) {
     auto& d = M5Cardputer.Display;
 
-    d.fillRoundRect(x + 6, y, 20, 12, 4, bodyColor);
-    d.fillCircle(x + 6, y + 4, 4, bodyColor);
-    d.fillCircle(x + 12, y - 1, 4, bodyColor);
-    d.fillCircle(x + 20, y - 1, 4, bodyColor);
-    d.fillCircle(x + 26, y + 4, 4, bodyColor);
+    d.fillRoundRect(x + 9, y, 30, 18, 6, bodyColor);
+    d.fillCircle(x + 9, y + 6, 6, bodyColor);
+    d.fillCircle(x + 18, y - 2, 6, bodyColor);
+    d.fillCircle(x + 30, y - 2, 6, bodyColor);
+    d.fillCircle(x + 39, y + 6, 6, bodyColor);
 
-    d.fillRect(x + 8, y + 11, 2, 5, headColor);
-    d.fillRect(x + 14, y + 11, 2, 5, headColor);
-    d.fillRect(x + 20, y + 11, 2, 5, headColor);
-    d.fillRect(x + 25, y + 11, 2, 5, headColor);
+    d.fillRect(x + 12, y + 17, 3, 8, headColor);
+    d.fillRect(x + 21, y + 17, 3, 8, headColor);
+    d.fillRect(x + 30, y + 17, 3, 8, headColor);
+    d.fillRect(x + 38, y + 17, 3, 8, headColor);
 
-    d.fillRoundRect(x, y + 2, 9, 8, 2, headColor);
-    d.fillTriangle(x + 1, y + 2, x + 4, y - 2, x + 6, y + 2, headColor);
+    d.fillRoundRect(x, y + 3, 14, 12, 3, headColor);
+    d.fillTriangle(x + 2, y + 3, x + 6, y - 3, x + 9, y + 3, headColor);
 
-    d.fillCircle(x + 3, y + 6, 1, eyeColor);
+    d.fillCircle(x + 5, y + 9, 2, eyeColor);
 }
 
 // Redraws only the alert screen's bottom row (used both for the initial
@@ -138,7 +138,7 @@ void uiShowIdle(uint8_t channel, uint32_t totalDetections, bool sdReady,
     d.setCursor(8, 96);
     d.print("SCANNING...");
 
-    drawSheep(172, 62, colSheepBody, colSheepHead, colEyeCalm);
+    drawSheep(184, 58, colSheepBody, colSheepHead, colEyeCalm);
 
     d.setTextSize(1);
     d.setTextColor(colHint);
@@ -173,7 +173,7 @@ void uiShowAlert(const Detection& det) {
              det.ieMatch ? "IE" : "");
     d.print(buf);
 
-    drawSheep(172, 62, TFT_WHITE, TFT_BLACK, colEyeAlert);
+    drawSheep(184, 58, TFT_WHITE, TFT_BLACK, colEyeAlert);
 
     drawCountdownRow(10);
 }
@@ -198,7 +198,7 @@ void uiShowMenu(bool audioAlertsEnabled) {
     d.setCursor(8, 58);
     d.print(audioAlertsEnabled ? "> ON <" : "> OFF <");
 
-    drawSheep(172, 70, colSheepBody, colSheepHead, colEyeCalm);
+    drawSheep(184, 58, colSheepBody, colSheepHead, colEyeCalm);
 
     d.setTextSize(1);
     d.setTextColor(colHint);
