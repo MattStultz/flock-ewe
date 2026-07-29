@@ -53,7 +53,8 @@ void setup() {
     gpsInit();
     sdReady = loggerInit();
 
-    uiShowIdle(wifiScanCurrentChannel(), totalDetections, sdReady, audioAlertsEnabled);
+    uiShowIdle(wifiScanCurrentChannel(), totalDetections, sdReady,
+               audioAlertsEnabled, gpsGetFix().valid);
 }
 
 void loop() {
@@ -76,7 +77,7 @@ void loop() {
         mode = MODE_ALERT;
         alertEnteredMs = now;
         lastBeepMs = now;
-        uiShowAlert(det);
+        uiShowAlert(det, gpsGetFix().valid);
         beep();
     }
 
@@ -85,11 +86,11 @@ void loop() {
     if (mNow && !prevMKeyPressed) {
         if (mode == MODE_IDLE) {
             mode = MODE_MENU;
-            uiShowMenu(audioAlertsEnabled);
+            uiShowMenu(audioAlertsEnabled, gpsGetFix().valid);
         } else if (mode == MODE_MENU) {
             mode = MODE_IDLE;
             uiShowIdle(wifiScanCurrentChannel(), totalDetections, sdReady,
-                       audioAlertsEnabled);
+                       audioAlertsEnabled, gpsGetFix().valid);
         }
     }
     prevMKeyPressed = mNow;
@@ -98,7 +99,7 @@ void loop() {
         bool enterNow = M5Cardputer.Keyboard.keysState().enter;
         if (enterNow && !prevEnterKeyPressed) {
             audioAlertsEnabled = !audioAlertsEnabled;
-            uiShowMenu(audioAlertsEnabled);
+            uiShowMenu(audioAlertsEnabled, gpsGetFix().valid);
         }
         prevEnterKeyPressed = enterNow;
     }
@@ -107,7 +108,7 @@ void loop() {
         if (now - alertEnteredMs >= ALERT_HOLD_MS) {
             mode = MODE_IDLE;
             uiShowIdle(wifiScanCurrentChannel(), totalDetections, sdReady,
-                       audioAlertsEnabled);
+                       audioAlertsEnabled, gpsGetFix().valid);
         } else if (now - lastBeepMs >= BEEP_INTERVAL_MS) {
             lastBeepMs = now;
             beep();
@@ -119,7 +120,7 @@ void loop() {
 
     if (mode == MODE_IDLE && now - lastUiRefresh > IDLE_REFRESH_MS) {
         uiShowIdle(wifiScanCurrentChannel(), totalDetections, sdReady,
-                   audioAlertsEnabled);
+                   audioAlertsEnabled, gpsGetFix().valid);
         lastUiRefresh = now;
     }
 }

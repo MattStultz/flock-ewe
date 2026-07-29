@@ -57,6 +57,14 @@ and a settings menu.
   MAC/RSSI/match info rather than queuing behind it.
 - The menu isn't reachable while an alert is showing — a real detection
   always takes priority.
+- A small satellite icon above the CyberEwe mascot shows GPS status —
+  solid cyan when the GNSS has a fix, muted grey when it doesn't.
+
+Every screen is composed into an off-screen `M5Canvas` sprite and pushed
+to the panel in one shot, rather than drawn primitive-by-primitive
+straight to the live display — that's what eliminates the flicker you'd
+otherwise see on every redraw (most noticeably the idle screen's 500ms
+refresh).
 
 ## Firmware setup (Arduino IDE)
 
