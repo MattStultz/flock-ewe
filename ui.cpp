@@ -2,41 +2,152 @@
 
 #include <M5Cardputer.h>
 
+namespace {
+
+uint16_t colBg;
+uint16_t colDim;
+uint16_t colCyan;
+uint16_t colMagenta;
+uint16_t colAmber;
+uint16_t colAlertBg;
+uint16_t colSheepBody;
+uint16_t colSheepHead;
+uint16_t colEyeCalm;
+uint16_t colEyeAlert;
+
+void drawHudCorners(uint16_t color) {
+    auto& d = M5Cardputer.Display;
+    const int len = 10;
+    d.drawFastHLine(0, 0, len, color);
+    d.drawFastVLine(0, 0, len, color);
+    d.drawFastHLine(240 - len, 0, len, color);
+    d.drawFastVLine(239, 0, len, color);
+    d.drawFastHLine(0, 134, len, color);
+    d.drawFastVLine(0, 134 - len, len, color);
+    d.drawFastHLine(240 - len, 134, len, color);
+    d.drawFastVLine(239, 134 - len, len, color);
+}
+
+void drawScanlines(uint16_t color) {
+    auto& d = M5Cardputer.Display;
+    for (int y = 0; y < 135; y += 4) {
+        d.drawFastHLine(0, y, 240, color);
+    }
+}
+
+// Faux-neon-glow text: a dim copy one pixel down-right, then the bright
+// copy on top.
+void drawGlowText(int x, int y, const char* text, uint8_t size, uint16_t glow,
+                   uint16_t bright) {
+    auto& d = M5Cardputer.Display;
+    d.setTextSize(size);
+    d.setTextColor(glow);
+    d.setCursor(x + 1, y + 1);
+    d.print(text);
+    d.setTextColor(bright);
+    d.setCursor(x, y);
+    d.print(text);
+}
+
+// "CyberEwe" mascot: a fluffy blocky body, one ear, four stub legs, and a
+// glowing sensor eye. Built from plain shape primitives rather than a
+// bitmap so it's easy to verify without a device on hand.
+void drawSheep(int x, int y, uint16_t bodyColor, uint16_t headColor,
+               uint16_t eyeColor) {
+    auto& d = M5Cardputer.Display;
+
+    d.fillRoundRect(x + 6, y, 20, 12, 4, bodyColor);
+    d.fillCircle(x + 6, y + 4, 4, bodyColor);
+    d.fillCircle(x + 12, y - 1, 4, bodyColor);
+    d.fillCircle(x + 20, y - 1, 4, bodyColor);
+    d.fillCircle(x + 26, y + 4, 4, bodyColor);
+
+    d.fillRect(x + 8, y + 11, 2, 5, headColor);
+    d.fillRect(x + 14, y + 11, 2, 5, headColor);
+    d.fillRect(x + 20, y + 11, 2, 5, headColor);
+    d.fillRect(x + 25, y + 11, 2, 5, headColor);
+
+    d.fillRoundRect(x, y + 2, 9, 8, 2, headColor);
+    d.fillTriangle(x + 1, y + 2, x + 4, y - 2, x + 6, y + 2, headColor);
+
+    d.fillCircle(x + 3, y + 6, 1, eyeColor);
+}
+
+}  // namespace
+
 void uiInit() {
-    M5Cardputer.Display.setRotation(1);
-    M5Cardputer.Display.setTextSize(1);
-    M5Cardputer.Display.fillScreen(TFT_BLACK);
+    auto& d = M5Cardputer.Display;
+    d.setRotation(1);
+    d.setTextSize(1);
+
+    colBg = d.color565(8, 8, 20);
+    colDim = d.color565(20, 40, 50);
+    colCyan = d.color565(0, 229, 255);
+    colMagenta = d.color565(255, 46, 154);
+    colAmber = d.color565(255, 196, 0);
+    colAlertBg = d.color565(180, 0, 60);
+    colSheepBody = d.color565(210, 230, 235);
+    colSheepHead = d.color565(30, 34, 46);
+    colEyeCalm = colCyan;
+    colEyeAlert = d.color565(255, 40, 40);
+
+    d.fillScreen(colBg);
 }
 
 void uiShowIdle(uint8_t channel, uint32_t totalDetections, bool sdReady) {
     auto& d = M5Cardputer.Display;
-    d.fillScreen(TFT_BLACK);
-    d.setTextColor(TFT_GREEN);
-    d.setCursor(4, 4);
-    d.println("Flock-Ewe: scanning");
+    d.fillScreen(colBg);
+    drawScanlines(colDim);
+    drawHudCorners(colCyan);
 
-    d.setTextColor(TFT_WHITE);
-    d.setCursor(4, 24);
-    d.printf("Channel: %d\n", channel);
-    d.setCursor(4, 40);
-    d.printf("Detections: %lu\n", (unsigned long)totalDetections);
-    d.setCursor(4, 56);
-    d.setTextColor(sdReady ? TFT_GREEN : TFT_RED);
-    d.printf("SD log: %s\n", sdReady ? "ready" : "unavailable");
+    drawGlowText(14, 8, "FLOCK-EWE", 2, colDim, colMagenta);
+
+    char buf[24];
+    d.setTextSize(1);
+    d.setTextColor(colCyan);
+    d.setCursor(14, 34);
+    snprintf(buf, sizeof(buf), "[ CH %02d ]", channel);
+    d.print(buf);
+
+    d.setCursor(90, 34);
+    snprintf(buf, sizeof(buf), "[ DET %03lu ]", (unsigned long)totalDetections);
+    d.print(buf);
+
+    d.setTextColor(sdReady ? colCyan : colMagenta);
+    d.setCursor(14, 48);
+    d.print(sdReady ? "[ SD OK ]" : "[ SD FAIL ]");
+
+    d.setTextColor(colAmber);
+    d.setCursor(14, 62);
+    d.print("> scanning for flock signal...");
+
+    drawSheep(190, 96, colSheepBody, colSheepHead, colEyeCalm);
 }
 
 void uiShowAlert(const Detection& det) {
     auto& d = M5Cardputer.Display;
-    d.fillScreen(TFT_RED);
-    d.setTextColor(TFT_WHITE);
-    d.setCursor(4, 4);
-    d.println("FLOCK CAMERA DETECTED");
+    d.fillScreen(colAlertBg);
+    drawHudCorners(colMagenta);
 
-    d.setCursor(4, 24);
-    d.printf("MAC: %02X:%02X:%02X:%02X:%02X:%02X\n", det.mac[0], det.mac[1],
-              det.mac[2], det.mac[3], det.mac[4], det.mac[5]);
-    d.setCursor(4, 44);
-    d.printf("RSSI: %d dBm  Ch: %d\n", det.rssi, det.channel);
-    d.setCursor(4, 64);
-    d.printf("Match: %s%s\n", det.ouiMatch ? "OUI " : "", det.ieMatch ? "IE" : "");
+    drawGlowText(10, 4, "!! FLOCK CAM !!", 2, TFT_BLACK, TFT_WHITE);
+
+    char buf[40];
+    d.setTextSize(1);
+    d.setTextColor(TFT_WHITE);
+
+    d.setCursor(6, 30);
+    snprintf(buf, sizeof(buf), "MAC  %02X:%02X:%02X:%02X:%02X:%02X", det.mac[0],
+             det.mac[1], det.mac[2], det.mac[3], det.mac[4], det.mac[5]);
+    d.print(buf);
+
+    d.setCursor(6, 46);
+    snprintf(buf, sizeof(buf), "RSSI %d dBm   CH %d", det.rssi, det.channel);
+    d.print(buf);
+
+    d.setCursor(6, 62);
+    snprintf(buf, sizeof(buf), "MATCH %s%s", det.ouiMatch ? "OUI " : "",
+             det.ieMatch ? "IE" : "");
+    d.print(buf);
+
+    drawSheep(190, 90, TFT_WHITE, TFT_BLACK, colEyeAlert);
 }
