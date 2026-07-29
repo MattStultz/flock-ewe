@@ -1,5 +1,6 @@
 #pragma once
 
+#include "gps.h"
 #include "wifi_scan.h"
 
 void uiInit();
@@ -12,3 +13,5 @@ void uiShowAlert(const Detection& detection, bool gpsLocked);
 void uiUpdateAlertCountdown(uint8_t secondsRemaining);
 
 void uiShowMenu(bool audioAlertsEnabled, bool gpsLocked);
+
+void uiShowGpsStatus(const GpsStatus& status);

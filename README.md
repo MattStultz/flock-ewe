@@ -24,6 +24,15 @@ with your local laws regarding RF reception and monitoring.
   read over UART (NMEA) on pins RX=13/TX=15. The module's SX1262 LoRa
   radio isn't used by this project yet.
 
+  The chip's actual NMEA baud rate isn't reliably documented — some vendor
+  docs claim 115200, but 9600 is the near-universal factory default for
+  this chip family. Rather than gamble on one, `gpsInit()`/`gpsLoop()`
+  probe both and lock onto whichever produces valid, checksummed
+  sentences. If you still never see a GPS lock after driving around with
+  clear sky view, check the GPS status screen (**G** from idle) — `LINK
+  NONE` after both rates have been tried points to a wiring/antenna issue
+  rather than a baud mismatch.
+
 ## Detection approach
 
 Two independent signals, either of which triggers an alert:
@@ -44,23 +53,26 @@ camera doesn't spam repeat alerts.
 
 ## On-device UI
 
-The screen has three states: an idle/scanning screen, a full-screen alert,
-and a settings menu.
+The screen has four states: an idle/scanning screen, a full-screen alert,
+a settings menu, and a GPS status screen.
 
 - Press **M** on the idle screen to open **Settings**, where **Enter**
   toggles audio alerts on/off; press **M** again to go back. The idle
   screen always shows a `[M] MENU` / `AUDIO:ON` hint at the bottom.
+- Press **G** on the idle screen to open **GPS status**: link/comms
+  status (`LINK OK`/`LINK NONE`), satellite count, and current lat/lng/
+  altitude if there's a fix. Press **G** again to go back.
 - On detection, the screen flashes to the alert view and holds for
   **10 seconds**, beeping once a second (if audio alerts are on) with a
   live countdown to the idle screen. A new detection while the alert is
   already showing resets the 10-second hold and refreshes the displayed
   MAC/RSSI/match info rather than queuing behind it.
-- The menu isn't reachable while an alert is showing — a real detection
-  always takes priority.
-- A small cyan satellite icon appears above the CyberEwe mascot when the
-  GNSS has a fix, and disappears entirely otherwise — a dimmer color for
-  "no fix" was tried first, but grey vs. cyan was too hard to tell apart
-  on this small screen.
+- Neither the menu nor the GPS screen is reachable while an alert is
+  showing — a real detection always takes priority.
+- A small cyan satellite icon appears above the CyberEwe mascot (and on
+  the GPS status screen) when the GNSS has a fix, and disappears entirely
+  otherwise — a dimmer color for "no fix" was tried first, but grey vs.
+  cyan was too hard to tell apart on this small screen.
 
 Every screen is composed into an off-screen `M5Canvas` sprite and pushed
 to the panel in one shot, rather than drawn primitive-by-primitive

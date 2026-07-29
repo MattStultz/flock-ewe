@@ -17,20 +17,23 @@
 
 namespace {
 
-enum AppMode { MODE_IDLE, MODE_ALERT, MODE_MENU };
+enum AppMode { MODE_IDLE, MODE_ALERT, MODE_MENU, MODE_GPS };
 
 const uint32_t ALERT_HOLD_MS = 10000;
 const uint32_t BEEP_INTERVAL_MS = 1000;
 const uint32_t IDLE_REFRESH_MS = 500;
+const uint32_t GPS_REFRESH_MS = 500;
 
 AppMode mode = MODE_IDLE;
 uint32_t totalDetections = 0;
 uint32_t lastUiRefresh = 0;
+uint32_t lastGpsUiRefresh = 0;
 uint32_t alertEnteredMs = 0;
 uint32_t lastBeepMs = 0;
 bool sdReady = false;
 bool audioAlertsEnabled = true;
 bool prevMKeyPressed = false;
+bool prevGKeyPressed = false;
 bool prevEnterKeyPressed = false;
 
 void beep() {
@@ -94,6 +97,26 @@ void loop() {
         }
     }
     prevMKeyPressed = mNow;
+
+    // Edge-detect the 'g' key for the GPS status screen.
+    bool gNow = M5Cardputer.Keyboard.isKeyPressed('g');
+    if (gNow && !prevGKeyPressed) {
+        if (mode == MODE_IDLE) {
+            mode = MODE_GPS;
+            uiShowGpsStatus(gpsGetStatus());
+            lastGpsUiRefresh = now;
+        } else if (mode == MODE_GPS) {
+            mode = MODE_IDLE;
+            uiShowIdle(wifiScanCurrentChannel(), totalDetections, sdReady,
+                       audioAlertsEnabled, gpsGetFix().valid);
+        }
+    }
+    prevGKeyPressed = gNow;
+
+    if (mode == MODE_GPS && now - lastGpsUiRefresh > GPS_REFRESH_MS) {
+        uiShowGpsStatus(gpsGetStatus());
+        lastGpsUiRefresh = now;
+    }
 
     if (mode == MODE_MENU) {
         bool enterNow = M5Cardputer.Keyboard.keysState().enter;

@@ -201,6 +201,58 @@ void uiUpdateAlertCountdown(uint8_t secondsRemaining) {
     drawCountdownRow(secondsRemaining);
 }
 
+void uiShowGpsStatus(const GpsStatus& status) {
+    canvas.fillSprite(colBg);
+    drawHudCorners(colCyan);
+
+    drawGlowText(6, 4, "GPS STATUS", 2, colDim, colCyan);
+    if (status.fix.valid) drawSatellite(195, 10, colCyan);
+
+    char buf[24];
+    canvas.setTextSize(2);
+
+    canvas.setTextColor(status.communicating ? colCyan : colMagenta);
+    canvas.setCursor(8, 24);
+    canvas.print(status.communicating ? "LINK OK" : "LINK NONE");
+
+    canvas.setTextColor(colCyan);
+    canvas.setCursor(8, 42);
+    snprintf(buf, sizeof(buf), "SATS %02d", status.satellites);
+    canvas.print(buf);
+
+    canvas.setTextColor(status.fix.valid ? TFT_WHITE : colHint);
+    canvas.setCursor(8, 60);
+    if (status.fix.valid) {
+        snprintf(buf, sizeof(buf), "LAT %.6f", status.fix.lat);
+    } else {
+        snprintf(buf, sizeof(buf), "LAT  --");
+    }
+    canvas.print(buf);
+
+    canvas.setCursor(8, 78);
+    if (status.fix.valid) {
+        snprintf(buf, sizeof(buf), "LNG %.6f", status.fix.lng);
+    } else {
+        snprintf(buf, sizeof(buf), "LNG  --");
+    }
+    canvas.print(buf);
+
+    canvas.setCursor(8, 96);
+    if (status.fix.valid) {
+        snprintf(buf, sizeof(buf), "ALT %.1fM", status.fix.altitudeM);
+    } else {
+        snprintf(buf, sizeof(buf), "ALT  --");
+    }
+    canvas.print(buf);
+
+    canvas.setTextSize(1);
+    canvas.setTextColor(colHint);
+    canvas.setCursor(6, 120);
+    canvas.print("[G] BACK");
+
+    canvas.pushSprite(0, 0);
+}
+
 void uiShowMenu(bool audioAlertsEnabled, bool gpsLocked) {
     canvas.fillSprite(colBg);
     drawHudCorners(colAmber);
