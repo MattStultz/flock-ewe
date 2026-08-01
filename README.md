@@ -15,6 +15,8 @@ algorithm independently rather than copying its code — see
 public over-the-air broadcast frames; you are responsible for complying
 with your local laws regarding RF reception and monitoring.
 
+![Idle screen](docs/idle-screen.png)
+
 ## Hardware
 
 - M5Stack CardputerADV (ESP32-S3, ST7789V2 display, TCA8418 keyboard,
