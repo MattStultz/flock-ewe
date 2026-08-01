@@ -9,6 +9,7 @@
 
 #include <M5Cardputer.h>
 
+#include "battery.h"
 #include "flock_detect.h"
 #include "gps.h"
 #include "logger.h"
@@ -64,6 +65,7 @@ void loop() {
     M5Cardputer.update();
     wifiScanLoop();
     gpsLoop();
+    batteryLoop();
 
     uint32_t now = millis();
 

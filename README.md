@@ -81,7 +81,17 @@ a settings menu, and a GPS status screen.
   screen.
 - A battery icon + percentage sits in the top-right corner on every
   screen — cyan above 50%, amber 20-50%, magenta at 20% or below, or
-  hint-grey with `--` if the level can't be read.
+  hint-grey with `--` if the level can't be read. It's a rolling average
+  of the last ~3 seconds of readings (see [battery.h](battery.h)/[battery.cpp](battery.cpp)),
+  not an instantaneous one — this device is almost always mid-scan
+  (WiFi promiscuous mode, channel-hopping), unlike, say, Launcher's idle
+  menu, and that current draw can sag the battery rail enough to read
+  meaningfully lower at the exact instant it's sampled. Averaging smooths
+  out that kind of transient dip. (Confirmed against both Launcher's and
+  M5Unified's source that this board's battery formula — GPIO10, 2.0x
+  divider, linear 3300-4150mV map — is identical either way; the earlier
+  mismatch against Launcher wasn't a formula bug, just an unsmoothed
+  single sample caught mid-sag.)
 
 Every screen is composed into an off-screen `M5Canvas` sprite and pushed
 to the panel in one shot, rather than drawn primitive-by-primitive

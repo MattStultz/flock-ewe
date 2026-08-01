@@ -3,6 +3,8 @@
 #include <M5Cardputer.h>
 #include <M5GFX.h>
 
+#include "battery.h"
+
 namespace {
 
 // Everything is drawn into this off-screen sprite and pushed to the panel
@@ -175,7 +177,7 @@ void uiShowIdle(uint8_t channel, uint32_t totalDetections, bool sdReady,
     canvas.fillSprite(colBg);
     drawScanlines(colDim);
     drawHudCorners(colCyan);
-    drawBattery(165, 4, M5.Power.getBatteryLevel());
+    drawBattery(165, 4, batteryGetLevel());
 
     drawGlowText(6, 4, "FLOCK-EWE", 2, colDim, colMagenta);
 
@@ -215,7 +217,7 @@ void uiShowIdle(uint8_t channel, uint32_t totalDetections, bool sdReady,
 void uiShowAlert(const Detection& det, bool gpsLocked) {
     canvas.fillSprite(colAlertBg);
     drawHudCorners(colMagenta);
-    drawBattery(165, 4, M5.Power.getBatteryLevel());
+    drawBattery(165, 4, batteryGetLevel());
 
     drawGlowText(6, 4, "!! FLOCK CAM !!", 2, TFT_BLACK, TFT_WHITE);
 
@@ -250,7 +252,7 @@ void uiUpdateAlertCountdown(uint8_t secondsRemaining) {
 void uiShowGpsStatus(const GpsStatus& status) {
     canvas.fillSprite(colBg);
     drawHudCorners(colCyan);
-    drawBattery(165, 4, M5.Power.getBatteryLevel());
+    drawBattery(165, 4, batteryGetLevel());
 
     drawGlowText(6, 4, "GPS STATUS", 2, colDim, colCyan);
     if (status.fix.valid) drawSatellite(155, 50, colCyan);
@@ -303,7 +305,7 @@ void uiShowGpsStatus(const GpsStatus& status) {
 void uiShowMenu(bool audioAlertsEnabled, bool gpsLocked) {
     canvas.fillSprite(colBg);
     drawHudCorners(colAmber);
-    drawBattery(165, 4, M5.Power.getBatteryLevel());
+    drawBattery(165, 4, batteryGetLevel());
 
     drawGlowText(6, 4, "SETTINGS", 2, colDim, colAmber);
 
