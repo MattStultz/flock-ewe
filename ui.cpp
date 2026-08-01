@@ -190,8 +190,8 @@ void uiShowIdle(uint8_t channel, uint32_t totalDetections, bool sdReady,
     canvas.setCursor(8, 96);
     canvas.print("SCANNING...");
 
-    if (gpsLocked) drawSatellite(184, 86, colCyan);
-    drawSheep(184, 58, colSheepBody, colSheepHead, colEyeCalm);
+    if (gpsLocked) drawSatellite(155, 50, colCyan);
+    drawSheep(184, 70, colSheepBody, colSheepHead, colEyeCalm);
 
     canvas.setTextSize(1);
     canvas.setTextColor(colHint);
@@ -228,8 +228,8 @@ void uiShowAlert(const Detection& det, bool gpsLocked) {
              det.ieMatch ? "IE" : "");
     canvas.print(buf);
 
-    if (gpsLocked) drawSatellite(184, 86, colCyan);
-    drawSheep(184, 58, TFT_WHITE, TFT_BLACK, colEyeAlert);
+    if (gpsLocked) drawSatellite(155, 50, colCyan);
+    drawSheep(184, 70, TFT_WHITE, TFT_BLACK, colEyeAlert);
 
     drawCountdownRow(10);  // also pushes the finished frame
 }
@@ -244,7 +244,7 @@ void uiShowGpsStatus(const GpsStatus& status) {
     drawBattery(186, 8, M5.Power.getBatteryLevel());
 
     drawGlowText(6, 4, "GPS STATUS", 2, colDim, colCyan);
-    if (status.fix.valid) drawSatellite(184, 86, colCyan);
+    if (status.fix.valid) drawSatellite(155, 50, colCyan);
 
     char buf[24];
     canvas.setTextSize(2);
@@ -307,8 +307,8 @@ void uiShowMenu(bool audioAlertsEnabled, bool gpsLocked) {
     canvas.setCursor(8, 58);
     canvas.print(audioAlertsEnabled ? "> ON <" : "> OFF <");
 
-    if (gpsLocked) drawSatellite(184, 86, colCyan);
-    drawSheep(184, 58, colSheepBody, colSheepHead, colEyeCalm);
+    if (gpsLocked) drawSatellite(155, 50, colCyan);
+    drawSheep(184, 70, colSheepBody, colSheepHead, colEyeCalm);
 
     canvas.setTextSize(1);
     canvas.setTextColor(colHint);

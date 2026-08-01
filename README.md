@@ -72,10 +72,11 @@ a settings menu, and a GPS status screen.
   MAC/RSSI/match info rather than queuing behind it.
 - Neither the menu nor the GPS screen is reachable while an alert is
   showing — a real detection always takes priority.
-- A small cyan satellite icon appears next to the CyberEwe mascot (and on
-  the GPS status screen) when the GNSS has a fix, and disappears entirely
-  otherwise — a dimmer color for "no fix" was tried first, but grey vs.
-  cyan was too hard to tell apart on this small screen.
+- A small cyan satellite icon appears just above and left of the CyberEwe
+  mascot (and on the GPS status screen) when the GNSS has a fix, and
+  disappears entirely otherwise — a dimmer color for "no fix" was tried
+  first, but grey vs. cyan was too hard to tell apart on this small
+  screen.
 - A battery icon + percentage sits in the top-right corner on every
   screen — cyan above 50%, amber 20-50%, magenta at 20% or below, or
   hint-grey with `--` if the level can't be read.
