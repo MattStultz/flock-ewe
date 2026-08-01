@@ -87,10 +87,19 @@ void drawSatellite(int x, int y, uint16_t color) {
     canvas.fillCircle(x + 12, y - 1, 1, color);
 }
 
-// Battery icon + percentage in the top-right corner. Outline/fill/text
+// Right edge the battery percentage text aligns to — matches the
+// sheep's rightmost point (drawSheep's x + 39 + 6 radius, with the
+// sheep drawn at x=184).
+const int BATTERY_TEXT_RIGHT_X = 229;
+
+// Battery icon + percentage in the top-right area. Outline/fill/text
 // all share one status color: cyan (fine), amber (getting low), magenta
-// (critical), or hint-grey with "--" if the level can't be read.
-void drawBattery(int x, int y, int8_t levelPercent) {
+// (critical), or hint-grey with "--" if the level can't be read. The
+// icon is its original small size, top-aligned with the title's `y`;
+// the percentage text is size 2 (matching the title) and right-aligned
+// to BATTERY_TEXT_RIGHT_X so it lines up with the sheep regardless of
+// how many digits it has.
+void drawBattery(int iconX, int y, int8_t levelPercent) {
     bool known = levelPercent >= 0;
     uint16_t color;
     if (!known) {
@@ -103,23 +112,23 @@ void drawBattery(int x, int y, int8_t levelPercent) {
         color = colMagenta;
     }
 
-    canvas.drawRect(x, y, 18, 9, color);
-    canvas.fillRect(x + 18, y + 2, 2, 5, color);
+    canvas.drawRect(iconX, y, 18, 9, color);
+    canvas.fillRect(iconX + 18, y + 2, 2, 5, color);
     if (known) {
         int fillWidth = (levelPercent * 14) / 100;
-        if (fillWidth > 0) canvas.fillRect(x + 2, y + 2, fillWidth, 5, color);
+        if (fillWidth > 0) canvas.fillRect(iconX + 2, y + 2, fillWidth, 5, color);
     }
 
-    canvas.setTextSize(1);
+    canvas.setTextSize(2);
     canvas.setTextColor(color);
-    canvas.setCursor(x + 23, y);
+    char buf[6];
     if (known) {
-        char buf[6];
         snprintf(buf, sizeof(buf), "%d%%", levelPercent);
-        canvas.print(buf);
     } else {
-        canvas.print("--");
+        snprintf(buf, sizeof(buf), "--");
     }
+    canvas.setCursor(BATTERY_TEXT_RIGHT_X - canvas.textWidth(buf), y);
+    canvas.print(buf);
 }
 
 // Redraws only the alert screen's bottom row (used both for the initial
@@ -166,7 +175,7 @@ void uiShowIdle(uint8_t channel, uint32_t totalDetections, bool sdReady,
     canvas.fillSprite(colBg);
     drawScanlines(colDim);
     drawHudCorners(colCyan);
-    drawBattery(186, 8, M5.Power.getBatteryLevel());
+    drawBattery(165, 4, M5.Power.getBatteryLevel());
 
     drawGlowText(6, 4, "FLOCK-EWE", 2, colDim, colMagenta);
 
@@ -206,7 +215,7 @@ void uiShowIdle(uint8_t channel, uint32_t totalDetections, bool sdReady,
 void uiShowAlert(const Detection& det, bool gpsLocked) {
     canvas.fillSprite(colAlertBg);
     drawHudCorners(colMagenta);
-    drawBattery(186, 8, M5.Power.getBatteryLevel());
+    drawBattery(165, 4, M5.Power.getBatteryLevel());
 
     drawGlowText(6, 4, "!! FLOCK CAM !!", 2, TFT_BLACK, TFT_WHITE);
 
@@ -241,7 +250,7 @@ void uiUpdateAlertCountdown(uint8_t secondsRemaining) {
 void uiShowGpsStatus(const GpsStatus& status) {
     canvas.fillSprite(colBg);
     drawHudCorners(colCyan);
-    drawBattery(186, 8, M5.Power.getBatteryLevel());
+    drawBattery(165, 4, M5.Power.getBatteryLevel());
 
     drawGlowText(6, 4, "GPS STATUS", 2, colDim, colCyan);
     if (status.fix.valid) drawSatellite(155, 50, colCyan);
@@ -294,7 +303,7 @@ void uiShowGpsStatus(const GpsStatus& status) {
 void uiShowMenu(bool audioAlertsEnabled, bool gpsLocked) {
     canvas.fillSprite(colBg);
     drawHudCorners(colAmber);
-    drawBattery(186, 8, M5.Power.getBatteryLevel());
+    drawBattery(165, 4, M5.Power.getBatteryLevel());
 
     drawGlowText(6, 4, "SETTINGS", 2, colDim, colAmber);
 
