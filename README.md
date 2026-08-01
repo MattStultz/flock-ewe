@@ -18,9 +18,10 @@ with your local laws regarding RF reception and monitoring.
 ## Hardware
 
 - M5Stack CardputerADV (ESP32-S3, ST7789V2 display, TCA8418 keyboard,
-  ES8311 speaker codec, microSD slot)
+  ES8311 speaker codec, microSD slot) — [buy](https://amzn.to/4xcuYYL)
 - [M5Stack Cap LoRa-1262](https://docs.m5stack.com/en/cap/Cap_LoRa-1262)
-  expansion module — used here only for its onboard GNSS chip (ATGM336H),
+  expansion module — [buy](https://amzn.to/45yumkh) — used here only for
+  its onboard GNSS chip (ATGM336H),
   read over UART (NMEA) at 115200 baud on board pins RX=**GPIO15**,
   TX=**GPIO13**. The module's SX1262 LoRa radio isn't used by this
   project yet.
@@ -71,10 +72,13 @@ a settings menu, and a GPS status screen.
   MAC/RSSI/match info rather than queuing behind it.
 - Neither the menu nor the GPS screen is reachable while an alert is
   showing — a real detection always takes priority.
-- A small cyan satellite icon appears above the CyberEwe mascot (and on
+- A small cyan satellite icon appears next to the CyberEwe mascot (and on
   the GPS status screen) when the GNSS has a fix, and disappears entirely
   otherwise — a dimmer color for "no fix" was tried first, but grey vs.
   cyan was too hard to tell apart on this small screen.
+- A battery icon + percentage sits in the top-right corner on every
+  screen — cyan above 50%, amber 20-50%, magenta at 20% or below, or
+  hint-grey with `--` if the level can't be read.
 
 Every screen is composed into an off-screen `M5Canvas` sprite and pushed
 to the panel in one shot, rather than drawn primitive-by-primitive

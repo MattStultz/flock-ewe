@@ -76,8 +76,8 @@ void drawSheep(int x, int y, uint16_t bodyColor, uint16_t headColor,
     canvas.fillCircle(x + 5, y + 9, 2, eyeColor);
 }
 
-// Small satellite glyph shown above the sheep only while the GPS has a
-// fix — it's simply omitted otherwise, rather than shown in a dimmer
+// Small satellite glyph tucked next to the sheep only while the GPS has
+// a fix — it's simply omitted otherwise, rather than shown in a dimmer
 // color (grey vs. cyan was too hard to tell apart on this small screen).
 void drawSatellite(int x, int y, uint16_t color) {
     canvas.fillRect(x, y + 5, 8, 4, color);
@@ -85,6 +85,41 @@ void drawSatellite(int x, int y, uint16_t color) {
     canvas.fillRect(x + 9, y + 4, 6, 6, color);
     canvas.fillRect(x + 11, y, 2, 4, color);
     canvas.fillCircle(x + 12, y - 1, 1, color);
+}
+
+// Battery icon + percentage in the top-right corner. Outline/fill/text
+// all share one status color: cyan (fine), amber (getting low), magenta
+// (critical), or hint-grey with "--" if the level can't be read.
+void drawBattery(int x, int y, int8_t levelPercent) {
+    bool known = levelPercent >= 0;
+    uint16_t color;
+    if (!known) {
+        color = colHint;
+    } else if (levelPercent > 50) {
+        color = colCyan;
+    } else if (levelPercent > 20) {
+        color = colAmber;
+    } else {
+        color = colMagenta;
+    }
+
+    canvas.drawRect(x, y, 18, 9, color);
+    canvas.fillRect(x + 18, y + 2, 2, 5, color);
+    if (known) {
+        int fillWidth = (levelPercent * 14) / 100;
+        if (fillWidth > 0) canvas.fillRect(x + 2, y + 2, fillWidth, 5, color);
+    }
+
+    canvas.setTextSize(1);
+    canvas.setTextColor(color);
+    canvas.setCursor(x + 23, y);
+    if (known) {
+        char buf[6];
+        snprintf(buf, sizeof(buf), "%d%%", levelPercent);
+        canvas.print(buf);
+    } else {
+        canvas.print("--");
+    }
 }
 
 // Redraws only the alert screen's bottom row (used both for the initial
@@ -131,6 +166,7 @@ void uiShowIdle(uint8_t channel, uint32_t totalDetections, bool sdReady,
     canvas.fillSprite(colBg);
     drawScanlines(colDim);
     drawHudCorners(colCyan);
+    drawBattery(186, 8, M5.Power.getBatteryLevel());
 
     drawGlowText(6, 4, "FLOCK-EWE", 2, colDim, colMagenta);
 
@@ -154,7 +190,7 @@ void uiShowIdle(uint8_t channel, uint32_t totalDetections, bool sdReady,
     canvas.setCursor(8, 96);
     canvas.print("SCANNING...");
 
-    if (gpsLocked) drawSatellite(195, 10, colCyan);
+    if (gpsLocked) drawSatellite(184, 86, colCyan);
     drawSheep(184, 58, colSheepBody, colSheepHead, colEyeCalm);
 
     canvas.setTextSize(1);
@@ -170,6 +206,7 @@ void uiShowIdle(uint8_t channel, uint32_t totalDetections, bool sdReady,
 void uiShowAlert(const Detection& det, bool gpsLocked) {
     canvas.fillSprite(colAlertBg);
     drawHudCorners(colMagenta);
+    drawBattery(186, 8, M5.Power.getBatteryLevel());
 
     drawGlowText(6, 4, "!! FLOCK CAM !!", 2, TFT_BLACK, TFT_WHITE);
 
@@ -191,7 +228,7 @@ void uiShowAlert(const Detection& det, bool gpsLocked) {
              det.ieMatch ? "IE" : "");
     canvas.print(buf);
 
-    if (gpsLocked) drawSatellite(195, 10, colCyan);
+    if (gpsLocked) drawSatellite(184, 86, colCyan);
     drawSheep(184, 58, TFT_WHITE, TFT_BLACK, colEyeAlert);
 
     drawCountdownRow(10);  // also pushes the finished frame
@@ -204,9 +241,10 @@ void uiUpdateAlertCountdown(uint8_t secondsRemaining) {
 void uiShowGpsStatus(const GpsStatus& status) {
     canvas.fillSprite(colBg);
     drawHudCorners(colCyan);
+    drawBattery(186, 8, M5.Power.getBatteryLevel());
 
     drawGlowText(6, 4, "GPS STATUS", 2, colDim, colCyan);
-    if (status.fix.valid) drawSatellite(195, 10, colCyan);
+    if (status.fix.valid) drawSatellite(184, 86, colCyan);
 
     char buf[24];
     canvas.setTextSize(2);
@@ -256,6 +294,7 @@ void uiShowGpsStatus(const GpsStatus& status) {
 void uiShowMenu(bool audioAlertsEnabled, bool gpsLocked) {
     canvas.fillSprite(colBg);
     drawHudCorners(colAmber);
+    drawBattery(186, 8, M5.Power.getBatteryLevel());
 
     drawGlowText(6, 4, "SETTINGS", 2, colDim, colAmber);
 
@@ -268,7 +307,7 @@ void uiShowMenu(bool audioAlertsEnabled, bool gpsLocked) {
     canvas.setCursor(8, 58);
     canvas.print(audioAlertsEnabled ? "> ON <" : "> OFF <");
 
-    if (gpsLocked) drawSatellite(195, 10, colCyan);
+    if (gpsLocked) drawSatellite(184, 86, colCyan);
     drawSheep(184, 58, colSheepBody, colSheepHead, colEyeCalm);
 
     canvas.setTextSize(1);
