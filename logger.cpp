@@ -17,12 +17,15 @@ bool sdReady = false;
 bool sessionNamed = false;
 char sessionPath[40] = "";
 
-// Names the session file from the GPS's UTC date/time at the moment of the
-// first detection, as "flockeweMMDDYYHHmm.txt". Falls back to a millis()-
-// based name if no GPS fix/time has been acquired yet.
+// Names the session file from an estimated *local* date/time at the moment
+// of the first detection, as "flockeweMMDDYYHHmm.txt" — see
+// gpsGetLocalDateTime() in gps.h for how "local" is approximated (longitude
+// + US DST rule, no real timezone database) and its known inaccuracies.
+// Falls back to a millis()-based name if no GPS fix/time has been acquired
+// yet.
 void nameSessionFile() {
     int month, day, year2, hour, minute;
-    if (gpsGetDateTime(month, day, year2, hour, minute)) {
+    if (gpsGetLocalDateTime(month, day, year2, hour, minute)) {
         snprintf(sessionPath, sizeof(sessionPath), "/flockewe%02d%02d%02d%02d%02d.txt",
                  month, day, year2, hour, minute);
     } else {

@@ -115,7 +115,7 @@ refresh).
 ## Logging
 
 Detections are appended as JSON-lines to a session file on the SD card,
-named `flockeweMMDDYYHHmm.txt` from the GPS's UTC date/time (e.g.
+named `flockeweMMDDYYHHmm.txt` from an *estimated local* date/time (e.g.
 `flockewe072926143022.txt`). The file is created lazily — on the *first*
 detection of the session, not at boot — so a session with no detections
 never creates an empty file, and each run gets its own file. If no GPS
@@ -131,8 +131,18 @@ present when a GPS fix was available at detection time:
 {"t":12345,"mac":"70:C9:4E:AA:BB:CC","rssi":-62,"ch":6,"oui":true,"ie":false,"gps_fix":true,"lat":40.712800,"lng":-74.006000,"alt_m":10.5,"sats":8}
 ```
 
-Note: the filename's date/time is UTC (as broadcast by GPS satellites),
-not local time.
+**About that "local" time**: this device has no network connection, so
+there's no real timezone/DST database to query. `gpsGetLocalDateTime()`
+(in [gps.h](gps.h)) approximates it from the GPS's UTC time plus the
+fix's longitude (15° per hour of offset), then applies the US DST rule
+(2nd Sunday of March – 1st Sunday of November). That means filenames will
+be off by about an hour, for roughly two-thirds of the year, in US
+regions that don't observe DST — **Arizona, parts of Indiana, Hawaii,
+etc.** — since there's no way to detect that from longitude alone.
+Outside the US it's just a longitude-based standard-time guess with no
+DST adjustment, since DST rules vary by country. If there's no location
+fix yet when the first detection happens (only a time fix), it falls
+back to plain UTC rather than guessing.
 
 ## Using with Launcher
 

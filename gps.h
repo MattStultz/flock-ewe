@@ -32,7 +32,22 @@ GpsFix gpsGetFix();
 // Diagnostic snapshot for the GPS status screen.
 GpsStatus gpsGetStatus();
 
-// Latest known UTC date/time from the GNSS almanac (NMEA RMC/GGA), used to
-// name session log files. `year2` is the two-digit year (e.g. 26 for 2026).
+// Latest known UTC date/time from the GNSS almanac (NMEA RMC/GGA).
+// `year2` is the two-digit year (e.g. 26 for 2026).
 // Returns false if no valid date/time has been parsed yet.
 bool gpsGetDateTime(int& month, int& day, int& year2, int& hour, int& minute);
+
+// Estimated *local* date/time, used to name session log files. There's no
+// network connection here for a real timezone/DST lookup, so this is an
+// approximation: UTC offset is estimated from longitude (15 degrees per
+// hour), then the US DST rule (2nd Sunday of March - 1st Sunday of
+// November) is applied. That means it will be wrong by about an hour, for
+// roughly two-thirds of the year, in US regions that don't observe DST
+// (Arizona, parts of Indiana, Hawaii, etc.) — there's no way to detect
+// that from longitude alone. Outside the US it's just a longitude-based
+// standard-time guess with no DST adjustment at all, since DST rules
+// vary by country. Falls back to UTC (offset 0) if there's no location
+// fix yet, even if the date/time itself is already valid.
+// Returns false if no valid date/time has been parsed yet.
+bool gpsGetLocalDateTime(int& month, int& day, int& year2, int& hour,
+                         int& minute);
